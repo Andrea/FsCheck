@@ -31,7 +31,7 @@ The documentation is also available in [Japanese](ja/index.html)
    in other frameworks these are often called parametrized tests or
    generative tests. FsCheck calls them properties.
 
- * [Generating test data](TestData.html) describes how to guide FsCheck to
+ * [Generating test data](TestData.html) this is a how to guide on how FsCheck can 
    generate better data or to stop it from generating data that doesn't make
    sense for what you're trying to test. FsCheck has a flexible language to describe test 
    value generators and shrinkers, and apply them to your properties.
