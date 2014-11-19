@@ -2,6 +2,7 @@
 #I "../../src/FsCheck/bin/Release"
 #r @"../../packages/xunit.1.9.2/lib/net20/xunit.dll"
 #r "FsCheck"
+#r "FsCheck.Xunit"
 
 open FsCheck
 open System
@@ -14,8 +15,11 @@ This section describes the various ways in which you can run FsCheck tests:
 * FsCheck has a built-in test runner that is easy to invoke from F# Interactive, commandline program or any test framework. 
 It writes the result of tests to standard output, and you can configure the FsCheck runner to throw an exception on test failure.
 
-* FsCheck.Xunit is a tight integration with xUnit.NET that allows you to specify properties and generators in a terse way. Tests written
-this way look like native xUnit.NET tests.
+* FsCheck.Xunit integrates FsCheck with xUnit.NET to allow you to specify properties in a terse way. Tests written
+this way look like native xUnit.NET tests, except they can take arguments.
+
+* FsCheck.NUnit integrates FsCheck with NUnit to allow you to specify properties in a terse way. Tests written
+this way look like native NUnit tests, except they can take arguments.
 
 * FsCheck allows you to register an IRunner implementation that it calls on each outcome and each individual test it runs. This allows
 a tighter integration with a specific test framework, and offers more control over printing of results.
@@ -101,7 +105,86 @@ do something with, but do not want them checked or registered, just make them pr
 
 ## Using FsCheck.Xunit
 
-TODO
+To use the integration install the FsCheck.Xunit nuget package. Then: *)
+
+open FsCheck
+open FsCheck.Xunit
+
+(**
+You can now attribute tests with `PropertyAttribute` (a subclass of xUnit.NET's `FactAttribute`). Unlike xUnit.NET's facts, these 
+methods can take arguments and should return a property. FsCheck will be used to generate and shrink the arguments based on the
+type and the currently registered generators. Also, the `PropertyAttribute` allows you to customize how FsCheck will run for that
+method, similar to how you would use the `Config` type otherwise. For example:*)
+
+[<Property>]
+let ``abs(v) % k equals abs(v % k)`` v (NonZeroInt k) = 
+    (abs v) % k = abs(v % k)
+
+(**
+Likely on of the most useful configuration options of `PropertyAttribute` is the ability to register or override an `Arbitrary`
+instance just for that test method. You can also use the `ArbitraryAttribute` to register or override `Abritrary` instances on 
+a per class or per module basis. For example:*)
+
+type Positive =
+    static member Double() =
+        Arb.Default.Float()
+        |> Arb.mapFilter abs (fun t -> t >= 0.0)
+
+type Negative =
+    static member Double() =
+        Arb.Default.Float()
+        |> Arb.mapFilter (abs >> ((-) 0.0)) (fun t -> t <= 0.0)
+
+[<Arbitrary(typeof<Negative>)>]
+module ModuleWithArbitrary =
+
+    [<Property>]
+    let ``should use Arb instances from enclosing module``(underTest:float) =
+        underTest <= 0.0
+
+    [<Property( Arbitrary=[| typeof<Positive> |] )>]
+    let ``should use Arb instance on method``(underTest:float) =
+        underTest >= 0.0
+
+(**
+### Using FsCheck.Xunit with TestDriven.Net
+
+[TestDriven.Net](http://testdriven.net) is a Visual Studio add-in that enables you to easily run a variety of tests
+while working with code in the IDE. Out of the box, TestDriven.Net can run tests written with FsCheck.Xunit.
+
+However, the user experience may, by default, be slightly less than optimal. TestDriven.Net outputs the state of the
+test run in an unobtrusive manner, but if test failures occur, it outputs the result of the failing tests to Visual
+Studio's Output window. If you have Visual Studio configured in such a way that the Output window only appears if there
+actually *is* any output, you may be used to interpret the appearance of the Output window as a test failure.
+
+Since the Output window also appears if anything is written to the console in general, this can produce false
+positives. If you're accustomed to interpret the appearance of the Output window as a sign of a test failure, it can be
+a little jarring that FsCheck by default always reports a bit of output on success.
+
+If, for that, or other reasons, you want to disable output on success, you can do so:
+*)
+
+[<Property(QuietOnSuccess = true)>]
+let ``abs(v) % k equals abs(v % k)`` v (NonZeroInt k) = 
+    (abs v) % k = abs(v % k)
+
+(**
+Setting `QuietOnSuccess = true` only suppresses the output in case of success; in the case of test failures, output
+appears as normal.
+*)
+
+(**
+## Using FsCheck.NUnit
+
+To use the integration install the FsCheck.Xunit nuget package. Then open FsCheck.NUnit.
+
+You can now attribute tests with `PropertyAttribute` (a subclass of NUnit's `TestAttribute`). Unlike NUnit tests, these 
+methods can take arguments and should return a property. FsCheck will be used to generate and shrink the arguments based on the
+type and the currently registered generators. Also, the `PropertyAttribute` allows you to customize how FsCheck will run for that
+method, similar to how you would use the `Config` type otherwise.
+
+Note: the NUnit integration doesn't have the ability, like FsCheck.Xunit, to override `Arbitrary` instances on a per class
+or per module basis. Otherwise, it is very similar.
 
 ## Implementing IRunner 
 
@@ -156,3 +239,30 @@ let formatterRunner formatter =
                               | t -> t
           printf "%s" (Runner.onFinishedToString name testResult') 
   }
+
+(**
+### Using FsCheck.NUnit with TestDriven.Net
+
+[TestDriven.Net](http://testdriven.net) is a Visual Studio add-in that enables you to easily run a variety of tests
+while working with code in the IDE. Out of the box, TestDriven.Net can run tests written with FsCheck.NUnit.
+
+However, the user experience may, by default, be slightly less than optimal. TestDriven.Net outputs the state of the
+test run in an unobtrusive manner, but if test failures occur, it outputs the result of the failing tests to Visual
+Studio's Output window. If you have Visual Studio configured in such a way that the Output window only appears if there
+actually *is* any output, you may be used to interpret the appearance of the Output window as a test failure.
+
+Since the Output window also appears if anything is written to the console in general, this can produce false
+positives. If you're accustomed to interpret the appearance of the Output window as a sign of a test failure, it can be
+a little jarring that FsCheck by default always reports a bit of output on success.
+
+If, for that, or other reasons, you want to disable output on success, you can do so:
+*)
+
+[<Property(QuietOnSuccess = true)>]
+let revUnit (x:char) = 
+    List.rev [x] = [x]
+
+(**
+Setting `QuietOnSuccess = true` only suppresses the output in case of success; in the case of test failures, output
+appears as normal.
+*)
