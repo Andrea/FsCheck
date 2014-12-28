@@ -244,6 +244,9 @@ Target "GenerateDocs" (fun _ ->
 Target "GenerateDocsJa" (fun _ ->
     executeFSIWithArgs "docs/tools" "generate.ja.fsx" ["--define:RELEASE"] [] |> ignore
 )
+Target "GenerateDocsEs" (fun _ ->
+    executeFSIWithArgs "docs/tools" "generate.es.fsx" ["--define:RELEASE"] [] |> ignore
+)
 
 // --------------------------------------------------------------------------------------
 // Release Scripts
