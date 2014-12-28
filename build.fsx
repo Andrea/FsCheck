@@ -288,6 +288,7 @@ Target "CI" DoNothing
 "Build"
   ==> "CleanDocs"
   ==> "GenerateDocsJa"
+  ==> "GenerateDocsEs"
   ==> "GenerateDocs"
   ==> "ReleaseDocs"
 
