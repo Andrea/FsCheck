@@ -8,48 +8,47 @@ open System
 (**
 # Propiedades
 
-Las propiedades son expresadas como definiciones de functiones en F#. Las propiedades son universalmente 
-cuantificadas sobre sus parametros, entonces:
+Las propiedades son expresadas como definiciones de funciones en F#. Las propiedades son universalmente
+cuantificadas sobre sus parámetros, entonces:
  *)
+
 
 let revRevIsOrig xs = List.rev(List.rev xs) = xs
 
 (**
-significa que la equalidad se mantiene para todas las listas xs.
+significa que la igualdad se mantiene para todas las listas xs.
 
-No es necesario que las propiedades tengan tipos monomorficos.
-Propiedades polymorficas, como la que se muestra en el ejemplo anterior, seran
-probadas por FsCheck como si el argumento generico es de tipo object; esto significa que los
+No es necesario que las propiedades tengan tipos monomórficos. 
+Propiedades polimórficas, como la que se muestra en el ejemplo anterior, serán
+probadas por FsCheck como si el argumento genérico es de tipo object; esto significa que los
 valores de varios tipos simples (bool, char, string, ...) son generados.
-Es posible que se de el caso donde una lista generada contiene mas de un tipo por ejemplo
-`{['r', "1a", true]}` seria una lista que puede ser usada para probar la propidad en el ejmplo
+Es posible que se de el caso donde una lista generada contiene más de un tipo por ejemplo
+`{['r', "1a", true]}` sería una lista que puede ser usada para probar la propiedad en el ejemplo
 anterior.
 
 Los valores generados estan basados en el tipo, sin embargo, este comportamiento puede
-ser cambiado simplemente dando xs un tipo inferido o explicito differente: *)
+ser cambiado simplemente dando xs un tipo inferido o explicito diferente: *)
 
 let revRevIsOrigInt (xs:list<int>) = List.rev(List.rev xs) = xs
 
 (** es probado solamente con listas de int.
 
-FsCheck puede checkear propiedades de varias formas - estas formas son llamadas testeable,
-y son indicadas en la API por un tipo generico llamado `'Testable`. Un `'Testable` puede
-ser una funcion de cualquier numero de parametros que devuelve bool o unit. En el ultimo 
-caso, la prueba pasa si no tira una excepcion
-  
-## Propiedades Condicionales
-
-Las propiedades pueden tomar la foma `<condition> ==> <property>`
+FsCheck puede chequear propiedades de varias formas - estas formas son llamadas testable,
+y son indicadas en la API por un tipo genérico llamado `'Testable`. Un `'Testable` puede
+ser una funcion de cualquier numero de parametros que devuelve bool o unit. En elúltimoo
+caso, la prueba pasa si no tira una excepción
+ 
+Las propiedades pueden tomar la forma `<condition> ==> <property>`
 
 Por ejemplo,*)
 
 (***hide***)
-let rec ordered xs = 
+let rec ordered xs =
   match xs with
   | [] -> true
   | [x] -> true
   | x::y::ys ->  (x <= y) && ordered (y::ys)
-let rec insert x xs = 
+let rec insert x xs =
   match xs with
   | [] -> [x]
   | c::cs -> if x <= c then x::xs else c::(insert x cs)
@@ -61,29 +60,18 @@ Check.Quick insertKeepsOrder
 (***include-output:insertKeepsOrder***)
 
 (**
-Esta propiedad se mantiene si la propiedad despues de  `==>` se mantiene cuando sea que la 
-condicion es verdadera.
+## Propiedades Condicionales
 
-Cuando se corren prubas que no satisface la condicion, dichas pruebas son descartadas.
-La generacion de pruebas continua hasta que 100 casos 
+Cuando se corren pruebas que no satisfacen la condición, dichas pruebas son descartadas.
+La generacion de pruebas continua hasta que 100 casos se hayan encontrado o hasta un que se llega a un límite global del número de casos de prueba (para evitar problemas de bucles continuos si la condición nunca se mantiene). En este caso un mensaje similar a: "Arguments exhausted after 97 tests." indica que se encontraron 97 casos de prueba que satisfacen la condición, y que la propiedad se mantuvo en esos 97 casos.
 
-
-Testing discards test cases which do not satisfy the condition. Test case generation 
-continues until 100 cases which do satisfy the condition have been found, or until 
-an overall limit on the number of test cases is reached (to avoid looping if the condition 
-never holds). In this case a message such as "Arguments exhausted after 97 tests."
-indicates that 97 test cases satisfying the condition were found, and that the property held in those 97 cases.
-
-Notice that in this case the generated values had to be restricted to int. This is because the generated 
-values need to be comparable, but this is not reflected in the types. Therefore, without the explicit 
-restriction, FsCheck could generate lists containing different types (subtypes of objects), and these are not mutually comparable.
+Es importante notar que, en este caso, los valores tuvieron que ser restringidos a int. Esto se debe a que los valores generados deben ser comparables, pero esto no se refleja en los tipos. Entonces sin la restriccion  explicita, FsCheck podria generar listas que contengan tipos diferente (subtipos de objetos) y estos no son mutuamente comparables.
+ 
     
-## Lazy Properties
+## Propiedades perezosas
 
-Since F# has eager evaluation by default, the above property does more work than necessary: 
-it evaluates the property at the right of the condition no matter what the 
-outcome of the condition on the left. While only a performance consideration in the above 
-example, this may limit the expressiveness of properties - consider:*)
+Desde que F # tiene evaluación ansiosa por defecto, la propiedad anterior hace más trabajo de lo necesario: evalúa la propiedad a la derecha de la condición, sin importar el resultado de la condición de la izquierda. Mientras es sólo una consideración de rendimiento en el anterior ejemplo, esto puede limitar la expresividad de propiedades - considere:
+*)
 
 (***define-output: eager***)
 let tooEager a = a <> 0 ==> (1/a = 1/a)
@@ -92,7 +80,9 @@ Check.Quick tooEager
 (***include-output: eager***)
 
 (**
-Lazy evaluation is needed here to make sure the propery is checked correctly:*)
+La evaluación perezosa es necesaria aquí para asegurarse de que la propiedad sea verificada correctamente:
+
+*)
 
 (***define-output: lazy***)
 let moreLazy a = a <> 0 ==> (lazy (1/a = 1/a))
@@ -101,11 +91,11 @@ Check.Quick moreLazy
 (***include-output: lazy***)
 
 (**   
-## Quantified Properties
+## Propiedades cuantificadas
 
-Properties may take the form `forAll <arbitrary>  (fun <args> -> <property>)`.
+Algunas propiedades pueden tomar la forma:  `forAll <arbitrary>  (fun <args> -> <property>)`.
 
-For example, *)
+por ejemplo, *)
 
 (***define-output:insertWithArb***)
 let orderedList = Arb.from<list<int>> |> Arb.mapFilter List.sort ordered
@@ -115,47 +105,47 @@ Check.Quick insertWithArb
 (***include-output:insertWithArb***)
 
 (**
-The first argument of forAll is an IArbitrary instance. Such an instance 
+El primer argumento de forAll es una instancia de IArbitraty. Dicha instancia encapsula un generador de test data y un shrinker (más acerca de esto en [Test Data](TestData.html))
+ 
+The first argument of forAll is an IArbitrary instance. Such an instance
 encapsulates a test data generator and a shrinker (more on that in [Test Data](TestData.html)).
-By supplying a custom generator, instead of using the default generator 
-for that type, it is possible to control the distribution of test data. In 
-the example, by supplying a custom generator for ordered lists, rather than 
-filtering out test cases which are not ordered, we guarantee that 100 test 
-cases can be generated without reaching the overall limit on test cases. 
-Combinators for defining generators are described in [Test Data](TestData.html).
+Mediante el suministro de un generador personalizado, en lugar de utilizar el generador predeterminado para ese tipo, es posible controlar la distribución de datos de prueba. En el ejemplo, mediante el suministro de un generador personalizado para listas ordenadas, en lugar de la eliminación de casos de prueba que no se piden, FsCheck garantiza que 100 pruebas casos se pueden generar sin alcanzar el límite global de casos de prueba.
+Los combinadores para definir generadores serán descriptos en [Test Data](TestData.html).
     
-## Expecting exceptions
+## Esperando excepciones
 
-You may want to test that a function or method throws an exception under certain circumstances. 
-Use `throws<'e :> exn,'a> Lazy<'a>` to achieve this. For example:*)
+Quizás el usuario desee probar que una funcion o metodo tira una excepción bajo ciertas circunstancias.
+
+You may want to test that a function or method throws an exception under certain circumstances.
+Use `throws<'e :> exn,'a> Lazy<'a>` para lograrlo. Por ejemplo:*)
 
 (***define-output: expectDivideByZero***)
 let expectDivideByZero() = Prop.throws<DivideByZeroException,_> (lazy (raise <| DivideByZeroException()))
 Check.Quick expectDivideByZero
 
 (***include-output: expectDivideByZero***)
-  
+ 
 (**
-## Timed Properties
+## Propiedades temporizadas
 
-Properties may take the form `within <timeout in ms> <Lazy<property>>`
+Las propiedades pueden tomar la forma `within <timeout in ms> <Lazy<property>>`
 
-For example,*)
+Por ejemplo,*)
 
 (***hide***)
-//TODO: figure out why this does not exit cleanly. If I eval, 
+//TODO: figure out why this does not exit cleanly. If I eval,
 //FSharp.Formatting formats this file nicely, but hangs on any
 //subsequent file. I suspect this has to do with some thread
 //not closing cleanly...
 //(***define-output:timesOut***)
 
 (***do-not-eval***)
-let timesOut (a:int) = 
+let timesOut (a:int) =
     lazy
         if a>10 then
             do System.Threading.Thread.Sleep(3000)
             true
-        else 
+        else
             true
     |> Prop.within 1000
 Check.Quick timesOut
@@ -164,12 +154,9 @@ Check.Quick timesOut
 //(***include-output:timesOut***)
 
 (**
-The first argument is the time the lazy property may run. If it runs longer, 
-FsCheck considers the test as failed. Otherwise, the outcome of the lazy property is 
-the outcome of within. Note that, although within attempts to cancel the thread in which 
-the property is executed, that may not succeed, and so the thread may actually continue to run until the process ends.
+El primer argumento es el tiempo que la propiedad perezosa puede ejecutar. Si se ejecuta por mas tiempo, Fscheck considera la prueba como fallida. De lo contrario, el resultado de la propiedad perezosa es el resultado de su interior. Tenga en cuenta que, aunque dentro de los intentos para cancelar el hilo en el cual la propiedad se ejecuta, que puede no tener éxito, por lo que el hilo puede realmente continuar funcionando hasta que termina el proceso.
     
-## Observing Test Case Distribution
+## Observando la distribucion de los casos de prueba
 
 It is important to be aware of the distribution of test cases: if test data is not well 
 distributed then conclusions drawn from the test results may be invalid. In particular, 
