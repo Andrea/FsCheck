@@ -168,64 +168,63 @@ making observations is incorporated into the statement of properties, each time
 the property is actually tested the observation is made, and the collected observations 
 are then summarized when testing is complete.
 
-### Counting Trivial Cases
+### Contando casos triviales 
 
-A property may take the form `trivial <condition> <property>`
+Una propiedad puede tomar la forma `trivial <condition> <property>`
 
-For example,*)
+Por ejemplo: *)
 
 (***define-output:insertTrivial***)
-let insertTrivial (x:int) xs = 
+let insertTrivial (x:int) xs =
   ordered xs ==> (ordered (insert x xs))
   |> Prop.trivial (List.length xs = 0)
 Check.Quick insertTrivial
 
 (**
-Test cases for which the condition is true are classified as trivial, and the proportion of 
-trivial test cases in the total is reported:*)
+Los casos de prueba para la que la condición es verdadera se clasifican como trivial, y la proporción de casos de prueba triviales en el total se reportan:
+*)
 
 (***include-output:insertTrivial***)
 
 (**
-### Classifying Test Cases
+### Clasificación de los casos de prueba
 
-A property may take the form `classify <condition> <string> <property>`
+Una propiedad puede tomar la forma `classify <condition> <string> <property>`
 
-For example,*)
+Por ejemplo,*)
 
 (***define-output:insertClassify***)
-let insertClassify (x:int) xs = 
+let insertClassify (x:int) xs =
   ordered xs ==> (ordered (insert x xs))
   |> Prop.classify (ordered (x::xs)) "at-head"
   |> Prop.classify (ordered (xs @ [x])) "at-tail"
 Check.Quick insertClassify
 
 (**
-Test cases satisfying the condition are assigned the classification given, and the distribution of 
-classifications is reported after testing:*)
+Los casos de prueba que satisfacen una condición son asignados como la clasificación obtenida, y la distribución de clasificaciones se informa después de la prueba::*)
 
 (***include-output:insertClassify***)
 
 (**
-Note that a test case may fall into more than one classification.
+Notese que los casos de prueba pueden tener mas de una clasificación.
 
-### Collecting Data Values
+### Recopilación de valores de datos
 
-A property may take the form `collect <expression> <property>`
+Una propiedad puede tomar la forma `collect <expression> <property>`
 
-For example,*)
+Por ejemplo,*)
 
 (***define-output: insertCollect***)
-let insertCollect (x:int) xs = 
+let insertCollect (x:int) xs =
   ordered xs ==> (ordered (insert x xs))
       |> Prop.collect (List.length xs)
 Check.Quick insertCollect
 
 (**
-The argument of collect is evaluated in each test case, and the distribution of 
-values is reported. The type of this argument is printed using `sprintf "%A"`:*)
+El argumento de collect se evalúa en cada caso de prueba, y la distribución de valores es reportada. El tipo de este argumento se imprime utilizando `sprintf "%A"`:*)
 
 (***include-output: insertCollect***)
+
 
 (**  
 ### Combining Observations
