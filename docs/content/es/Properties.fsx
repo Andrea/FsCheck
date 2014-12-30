@@ -227,14 +227,12 @@ El argumento de collect se evalúa en cada caso de prueba, y la distribución de
 
 
 (**  
-### Combining Observations
+### Combinando observaciones
 
-The observations described here may be combined in any way. All the observations 
-of each test case are combined, and the distribution of these combinations is 
-reported. For example:*)
+Las observaciones descriptas aqui pueden ser cobinadas en cualquier manera. Todas las observaciones de cada prueba son combinadas, y la distribucion de esta combinacion reportada. Por ejemplo: *)
 
 (***define-output:insertCombined***)
-let insertCombined (x:int) xs = 
+let insertCombined (x:int) xs =
     ordered xs ==> (ordered (insert x xs))
     |> Prop.classify (ordered (x::xs)) "at-head"
     |> Prop.classify (ordered (xs @ [x])) "at-tail"
@@ -244,19 +242,18 @@ Check.Quick insertCombined
 (***include-output:insertCombined***)
 
 (**
-## And, Or and Labels
+## And, Or y etiquetas
 
-Properties may take the form
+Las propiedades pueden tomar la forma
 
-* `<property> .&. <property>` succeeds if both succeed, fails if one of the properties fails, and is rejected when both are rejected.
-* `<property> .|. <property>`succeeds if either property succeeds, fails if both properties fail, and is rejected when both are rejected.
+* `<property> .&. <property>` tiene éxito si las ambas tienen éxito y falla si una de las propiedades falla. Es rechazada cuando ambas son rechazadas.
+* `<property> .|. <property>` tiene exito si una tiene exito, falla si las dos propiedades fallan y es rechazadas cuando ambas son rechazadas.
 
-The `.&.` combinator is most commonly used to write complex properties which share a generator. 
-In that case, it might be difficult upon failure to know excactly which sub-property has caused the failure. 
-That's why you can label sub-properties, and FsCheck shows the labels of the failed subproperties when 
-it finds a counter-example. This takes the form: `<string> @| <property>` or `<property> |@ <string>`.
+El combinador `.&.` es más comúnmente utilizado para escribir las propiedades complejas que comparten un generador.
+En estos casos, puede ser dificil establecer exactamente cual subpropiedad ha causado el fallo. 
+Este es el motivo por el cual, se pueden nombrar subpropiedades y FsCheck muestra los nombres de las subpropiedades que fallaron cuando encuentra un contraejemplo. Esto toma la forma : `<string> @| <property>` or `<property> |@ <string>`.
 
-For example,*)
+Por ejemplo,*)
 
 (***define-output:complex***)
 let complex (m: int) (n: int) =
@@ -269,8 +266,8 @@ Check.Quick complex
 (***include-output:complex***)
 
 (**
-It's perfectly fine to apply more than one label to a property; FsCheck displays all the applicable labels. 
-This is useful for displaying intermediate results, for example:*)
+Es perfectamente posible aplicar más de una etiqueta a una propiedad; Fscheck muestra todas las etiquetas aplicables.
+Esto es útil para mostrar los resultados intermedios,  por ejemplo:*)
 
 (***define-output:multiply***)
 let multiply (n: int, m: int) =
@@ -285,12 +282,12 @@ Check.Quick multiply
 (***include-output:multiply***)
 
 (**
-Notice that the above property combines subproperties by tupling them. This works for tuples up to length 6 and lists:
+Observe que la propiedad anterior combina subpropiedades creando tuplas. Esto funciona para tuplas hasta longitud 6 y listas:
 
 *    `(<property1>,<property2>,...,<property6>)` means `<property1> .&. <property2> .&.... .&.<property6>`
 *    `[property1;property2,...,propertyN]` means `<property1> .&. <property2> .&.... .&.<propertyN>`
 
-The example written as a list:*)
+El mismo ejemplo escrito como una lista:*)
 
 let multiplyAsList (n: int, m: int) =
     let res = n*m
@@ -300,4 +297,5 @@ let multiplyAsList (n: int, m: int) =
       "lt1"  @| (res > m);
       "lt2"  @| (res > n)]
 (**
-Produces the same result.*)
+Produce el mismo resultado.*)
+
