@@ -298,4 +298,3 @@ let multiplyAsList (n: int, m: int) =
       "lt2"  @| (res > n)]
 (**
 Produce el mismo resultado.*)
-
